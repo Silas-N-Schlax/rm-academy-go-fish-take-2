@@ -1,3 +1,4 @@
+require 'socket'
 require_relative '../server/socket_server'
 
 server = SocketServer.new
