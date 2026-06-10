@@ -50,7 +50,7 @@ class SocketServer
   private
 
   def all_clients_have_name
-    return unless clients.none? { |client| client.name.nil? }
+    # return true if clients.none? { |client| client.name.nil? }
 
     clients.each do |client|
       client.ask_socket(NAME_MESSAGE) unless client.name_message
@@ -58,5 +58,6 @@ class SocketServer
       has_name = client.read_socket
       client.name = has_name if has_name
     end
+    true if clients.none? { |client| client.name.nil? }
   end
 end
