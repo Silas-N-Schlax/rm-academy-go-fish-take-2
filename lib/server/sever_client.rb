@@ -19,6 +19,6 @@ class ServerClient
   def read_socket(delay = 0.3)
     sleep(delay)
     socket.read_nonblock(1000).chomp
-    rescue IO::WaitReadable
+  rescue IO::WaitReadable
   end
 end
