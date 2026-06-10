@@ -4,7 +4,7 @@ require_relative '../helpers/mock_socket_client'
 
 describe Client do
   before(:each) do
-    @clients = []
+    @users = []
     @server = SocketServer.new
     @server.start
     sleep 0.1
@@ -12,24 +12,26 @@ describe Client do
 
   after(:each) do
     @server.stop
-    @clients.each do |client|
+    @users.each do |client|
       client.close
     end
   end
 
   describe '#write_socket' do
     let!(:client) { create_test_client }
-    let(:server_client) { described_class.new(@server.clients.first.socket) }
+    let(:user) { @server.users.first }
+    let(:server_client) { described_class.new(user.client.socket) }
     it 'the client receives message from socket' do
       expected_message = 'Hello there!'
       server_client.write_socket(expected_message)
       expect(client.capture_output).to eq expected_message
     end
   end
-
+  
   describe '#ask_socket' do
     let!(:client) { create_test_client }
-    let(:server_client) { described_class.new(@server.clients.first.socket) }
+    let(:user) { @server.users.first }
+    let(:server_client) { described_class.new(user.client.socket) }
     it 'the client receives message from socket' do
       message = 'Hello there!'
       expected_message = 'Hello there! ->'
@@ -40,7 +42,8 @@ describe Client do
 
   describe '#read_socket' do
     let!(:client) { create_test_client }
-    let(:server_client) { described_class.new(@server.clients.first.socket) }
+    let(:user) { @server.users.first }
+    let(:server_client) { described_class.new(user.client.socket) }
     it 'the client sends a message to the server' do
       expected_message = 'Hello World!'
       client.provide_input(expected_message)
@@ -53,7 +56,7 @@ describe Client do
 
   def create_test_client
     client = MockSocketClient.new(@server.port_number)
-    @clients.push(client)
+    @users.push(client)
     @server.accept_new_client
     sleep 0.1
     client.capture_output

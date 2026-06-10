@@ -1,11 +1,11 @@
 require 'socket'
 require_relative '../../lib/server/socket_server'
 require_relative '../helpers/mock_socket_client'
-require_relative '../../lib/server/sever_client'
+require_relative '../../lib/server/client'
 
 describe SocketServer do
   before(:each) do
-    @clients = []
+    @users = []
     @server = SocketServer.new
     @server.start
     sleep 0.1
@@ -13,7 +13,7 @@ describe SocketServer do
 
   after(:each) do
     @server.stop
-    @clients.each do |client|
+    @users.each do |client|
       client.close
     end
   end
@@ -24,26 +24,34 @@ describe SocketServer do
   end
 
   describe '#accept_new_client' do
-    it 'clients get a welcome message' do
+    it 'users get a welcome message' do
       client1 = MockSocketClient.new(@server.port_number)
-      @clients.push client1
+      @users.push client1
       @server.accept_new_client
       welcome_message = /welcome/i
       expect(client1.capture_output).to match welcome_message
     end
 
-    it 'Client was added to the clients' do
+    it 'Client was added to the users' do
       client = MockSocketClient.new(@server.port_number)
-      @clients.push client
+      @users.push client
       @server.accept_new_client
-      expected_clients_size = 1
-      expect(@server.clients.size).to eq expected_clients_size
-      expect(@server.clients.first).to be_a ServerClient
+      expected_users_size = 1
+      expect(@server.users.size).to eq expected_users_size
+      expect(@server.users.first).to be_a User
+    end
+    it 'client has the correct player_id' do
+      client = MockSocketClient.new(@server.port_number)
+      @users.push client
+      @server.accept_new_client
+      expected_users_id = 1
+      server_client = @server.users.first
+      expect(server_client.id).to eq expected_users_id
     end
   end
 
   describe '#create_game_if_possible' do
-    context 'when there are no clients' do
+    context 'when there are no users' do
       it 'returns' do
         expect(@server.create_game_if_possible).to be_nil
       end
@@ -56,19 +64,19 @@ describe SocketServer do
       end
     end
 
-    context 'when there are 2 or more clients' do
+    context 'when there are 2 or more users' do
       let!(:client1) { create_test_client }
       let!(:client2) { create_test_client }
       let(:welcome_message) { /go.*fish.*starting/xi }
       context 'when one or more client does not have a name' do
-        it 'both clients get a message asking for name' do
+        it 'both users get a message asking for name' do
           @server.create_game_if_possible
           expected_message = 'What would you like your name to be? ->'
           expect(client1.capture_output).to eq expected_message
           expect(client2.capture_output).to eq expected_message
         end
 
-        it 'both clients do not get a second message asking for name' do
+        it 'both users do not get a second message asking for name' do
           @server.create_game_if_possible
           client1.capture_output
           client2.capture_output
@@ -82,16 +90,16 @@ describe SocketServer do
             client_name = 'Silas'
             client1.provide_input(client_name)
             @server.create_game_if_possible
-            server_client = @server.clients.first
+            server_client = @server.users.first
             expect(server_client.name).to eq client_name
           end
         end
       end
 
-      context 'when all clients have a name' do
+      context 'when all users have a name' do
         before do
-          @server.clients.first.name = 'Silas'
-          @server.clients.last.name = 'Bob'
+          @server.users.first.name = 'Silas'
+          @server.users.last.name = 'Bob'
           @server.create_game_if_possible
         end
         it 'all players get a starting message' do
@@ -101,8 +109,8 @@ describe SocketServer do
         it 'starts a game' do
           expected_game_size = 1
           expect(@server.games.count).to be expected_game_size
+          expect(@server.games.first).to be_a GameSession
         end
-        it 'clients have been removed from array'
       end
     end
   end
@@ -110,7 +118,7 @@ describe SocketServer do
   def create_test_client
     client = MockSocketClient.new(@server.port_number)
     sleep 0.1
-    @clients.push(client)
+    @users.push(client)
     @server.accept_new_client
     sleep 0.1
     client.capture_output
