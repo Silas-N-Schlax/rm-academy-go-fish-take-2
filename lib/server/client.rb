@@ -1,6 +1,6 @@
 # client class
-class ServerClient
-  attr_accessor :socket, :name, :name_message
+class Client
+  attr_accessor :socket, :name, :name_message, :id
 
   INPUT_SYMBOL = ' ->'.freeze
 

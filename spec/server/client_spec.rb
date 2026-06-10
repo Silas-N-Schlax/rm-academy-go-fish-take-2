@@ -1,8 +1,8 @@
-require_relative '../../lib/server/sever_client'
+require_relative '../../lib/server/client'
 require_relative '../../lib/server/socket_server'
 require_relative '../helpers/mock_socket_client'
 
-describe ServerClient do
+describe Client do
   before(:each) do
     @clients = []
     @server = SocketServer.new
@@ -16,7 +16,6 @@ describe ServerClient do
       client.close
     end
   end
-  # sending and receiving messages
 
   describe '#write_socket' do
     let!(:client) { create_test_client }
