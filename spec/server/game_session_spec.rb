@@ -31,7 +31,7 @@ describe GameSession do
     it 'creates a game' do
       expect(game_session.game).to_not be_nil
     end
-   it 'sends hands to the users' do
+    it 'sends hands to the users' do
       game_session.play_turn
       hand_regex = /,.*following.*cards.*hand.*-.*of/im
       expect(mock_client1.capture_output).to match hand_regex
@@ -204,7 +204,7 @@ describe GameSession do
     client = MockSocketClient.new(@server.port_number)
     sleep 0.1
     @users.push(client)
-    @server.accept_new_client
+    @server.accept_new_user
     sleep 0.1
     client.capture_output
     client

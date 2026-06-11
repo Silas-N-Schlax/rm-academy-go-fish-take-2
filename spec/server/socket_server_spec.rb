@@ -23,11 +23,11 @@ describe SocketServer do
     expect { MockSocketClient.new(@server.port_number) }.to raise_error(Errno::ECONNREFUSED)
   end
 
-  describe '#accept_new_client' do
+  describe '#accept_new_user' do
     it 'users get a welcome message' do
       client1 = MockSocketClient.new(@server.port_number)
       @users.push client1
-      @server.accept_new_client
+      @server.accept_new_user
       welcome_message = /welcome/i
       expect(client1.capture_output).to match welcome_message
     end
@@ -35,7 +35,7 @@ describe SocketServer do
     it 'Client was added to the users' do
       client = MockSocketClient.new(@server.port_number)
       @users.push client
-      @server.accept_new_client
+      @server.accept_new_user
       expected_users_size = 1
       expect(@server.users.size).to eq expected_users_size
       expect(@server.users.first).to be_a User
@@ -43,24 +43,24 @@ describe SocketServer do
     it 'client has the correct player_id' do
       client = MockSocketClient.new(@server.port_number)
       @users.push client
-      @server.accept_new_client
+      @server.accept_new_user
       expected_users_id = 1
       server_client = @server.users.first
       expect(server_client.id).to eq expected_users_id
     end
   end
 
-  describe '#create_game_if_possible' do
+  describe '#create_game_session_if_possible' do
     context 'when there are no users' do
       it 'returns' do
-        expect(@server.create_game_if_possible).to be_nil
+        expect(@server.create_game_session_if_possible).to be_nil
       end
     end
 
     context 'when there is 1 client' do
       it 'returns' do
         create_test_client
-        expect(@server.create_game_if_possible).to be_nil
+        expect(@server.create_game_session_if_possible).to be_nil
       end
     end
 
@@ -70,17 +70,17 @@ describe SocketServer do
       let(:welcome_message) { /go.*fish.*starting/xi }
       context 'when one or more client does not have a name' do
         it 'both users get a message asking for name' do
-          @server.create_game_if_possible
+          @server.create_game_session_if_possible
           expected_message = 'What would you like your name to be? ->'
           expect(client1.capture_output).to eq expected_message
           expect(client2.capture_output).to eq expected_message
         end
 
         it 'both users do not get a second message asking for name' do
-          @server.create_game_if_possible
+          @server.create_game_session_if_possible
           client1.capture_output
           client2.capture_output
-          @server.create_game_if_possible
+          @server.create_game_session_if_possible
           expect(client1.capture_output).to eq ''
           expect(client2.capture_output).to eq ''
         end
@@ -89,7 +89,7 @@ describe SocketServer do
           it 'updates the client name' do
             client_name = 'Silas'
             client1.provide_input(client_name)
-            @server.create_game_if_possible
+            @server.create_game_session_if_possible
             server_client = @server.users.first
             expect(server_client.name).to eq client_name
           end
@@ -100,7 +100,7 @@ describe SocketServer do
         before do
           @server.users.first.name = 'Silas'
           @server.users.last.name = 'Bob'
-          @server.create_game_if_possible
+          @server.create_game_session_if_possible
         end
         it 'all players get a starting message' do
           expect(client1.capture_output).to match welcome_message
@@ -119,7 +119,7 @@ describe SocketServer do
     client = MockSocketClient.new(@server.port_number)
     sleep 0.1
     @users.push(client)
-    @server.accept_new_client
+    @server.accept_new_user
     sleep 0.1
     client.capture_output
     client

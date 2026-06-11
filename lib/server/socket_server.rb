@@ -28,7 +28,7 @@ class SocketServer
     @users ||= []
   end
 
-  def accept_new_client
+  def accept_new_user
     socket = @server.accept_nonblock
     user = User.new(Client.new(socket), generate_id)
     users << user
@@ -37,12 +37,17 @@ class SocketServer
     # puts 'No Client to Accept...'
   end
 
-  def create_game_if_possible
+  def create_game_session_if_possible
     return if users.length < MIN_GAME_SIZE
     return unless all_users_have_name
 
     users.each { |user| user.client.write_socket(START_MESSAGE) }
     create_game_session
+  end
+
+  def run_game(game_session)
+    game_session.start
+    game_session.play_game
   end
 
   def stop
@@ -68,6 +73,6 @@ class SocketServer
       has_name = user.client.read_socket
       user.name = has_name if has_name
     end
-    true if users.none? { |client| client.name.nil? }
+    true if users.all?(&:name)
   end
 end

@@ -57,7 +57,7 @@ describe Client do
   def create_test_client
     client = MockSocketClient.new(@server.port_number)
     @users.push(client)
-    @server.accept_new_client
+    @server.accept_new_user
     sleep 0.1
     client.capture_output
     client
