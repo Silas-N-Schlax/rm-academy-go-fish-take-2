@@ -1,3 +1,4 @@
+require_relative 'book'
 # Player class
 class Player
   attr_reader :user
@@ -10,6 +11,7 @@ class Player
 
   def add_cards(cards)
     cards.each { |card| hand << card }
+    create_book_if_possible
   end
 
   def hand_size
@@ -39,5 +41,24 @@ class Player
 
   def empty_hand?
     hand.empty?
+  end
+
+  def books_size
+    books.size
+  end
+
+  private
+
+  def create_book_if_possible
+    hand.group_by(&:rank).each do |group|
+      card_group = group.last
+      create_book_and_remove_cards(group.first) if card_group.length == 4
+    end
+    books.last
+  end
+
+  def create_book_and_remove_cards(book_rank)
+    books << Book.new(book_rank)
+    take_cards_of_rank(book_rank)
   end
 end
