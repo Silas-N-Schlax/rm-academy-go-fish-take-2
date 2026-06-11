@@ -27,7 +27,7 @@ describe Client do
       expect(client.capture_output).to eq expected_message
     end
   end
-  
+
   describe '#ask_socket' do
     let!(:client) { create_test_client }
     let(:user) { @server.users.first }

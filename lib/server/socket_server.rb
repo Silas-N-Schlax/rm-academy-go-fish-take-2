@@ -52,11 +52,9 @@ class SocketServer
   private
 
   def create_game_session
-    # game_session = GameSession.new
-    # game_session.create_session(users)
-    # games << game_session
-    # game_session
-    games << GameSession.new
+    game_session = GameSession.new(users)
+    games << game_session
+    game_session
   end
 
   def generate_id
