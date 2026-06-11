@@ -44,4 +44,12 @@ describe Card do
       expect(described_class.valid_rank?(rank)).to be true
     end
   end
+  describe '.value' do
+    context 'when provided with an index' do
+      it 'returns the index of the rank' do
+        rank = 'K'
+        expect(described_class.value(rank)).to be 11
+      end
+    end
+  end
 end

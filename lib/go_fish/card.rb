@@ -27,4 +27,8 @@ class Card
   def self.valid_rank?(rank)
     RANKS.include?(rank.upcase)
   end
+
+  def self.value(rank)
+    RANKS.index(rank)
+  end
 end
