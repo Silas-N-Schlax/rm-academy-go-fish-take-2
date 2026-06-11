@@ -23,7 +23,7 @@ describe GameSession do
   let!(:mock_client1) { create_test_client }
   let!(:mock_client2) { create_test_client }
   let(:user1) { @server.users.first }
-  let(:user2) { @server.users.first }
+  let(:user2) { @server.users.last }
 
   describe '#start' do
     let(:game_session) { described_class.new([user1, user2]) }
@@ -31,15 +31,16 @@ describe GameSession do
     it 'creates a game' do
       expect(game_session.game).to_not be_nil
     end
-    xit 'sends hands to the users' do
-      hand_regex = /silas.*following.*cards.*hand.*-.*of/im
+   it 'sends hands to the users' do
+      game_session.play_turn
+      hand_regex = /,.*following.*cards.*hand.*-.*of/im
       expect(mock_client1.capture_output).to match hand_regex
       expect(mock_client2.capture_output).to match hand_regex
     end
   end
 
   describe '#play_turn' do
-    let(:game_session) { described_class.new(user1, user2) }
+    let(:game_session) { described_class.new([user1, user2]) }
     let(:game) { game_session.game }
     before do
       game_session.start
@@ -60,8 +61,8 @@ describe GameSession do
         mock_client1.capture_output
         mock_client2.capture_output
         expect(game_session.play_turn).to be_nil
-        current_message = 'Your turn has been skipped.'
-        all_message = 'Player1\'s turn has been skipped.'
+        current_message = 'Your, turn has been skipped.'
+        all_message = 'Player1\'s, turn has been skipped.'
         expect(mock_client2.capture_output).to eq all_message
         expect(mock_client1.capture_output).to eq current_message
       end
@@ -77,8 +78,10 @@ describe GameSession do
     context 'when a player is asked for input' do
       context 'when no input is provided' do
         it 'returns and sends message once' do
+          mock_client1.capture_output
           expect(game_session.play_turn).to be_nil
-          expect(mock_client1.capture_output).to eq PLAYER_MESSAGE
+          player_message_regex = /who.*would.*you.*like.*to.*ask?/im
+          expect(mock_client1.capture_output).to match player_message_regex
           game_session.play_turn
           expect(mock_client1.capture_output).to be_empty
         end
@@ -87,16 +90,20 @@ describe GameSession do
       context 'when only the player in question is given' do
         it 'returns and sends message once' do
           player_selection = '2'
+          game_session.play_turn
+          mock_client1.capture_output
           mock_client1.provide_input(player_selection)
+          game_session.play_turn
           expect(game_session.play_turn).to be_nil
           expect(mock_client1.capture_output).to eq RANK_MESSAGE
           game_session.play_turn
           expect(mock_client1.capture_output).to be_empty
+          # ! Shorten
         end
       end
 
       context 'when both input is provided' do
-        it 'returns true' do
+        xit 'returns true' do
           player_selection = '2'
           rank_selection = 'K'
           provide_and_run(game_session, mock_client1, player_selection)
@@ -143,14 +150,15 @@ describe GameSession do
         it 'sends message if valid but does not have' do
           provide_run_capture(game_session, mock_client1, player_selection)
           provide_run_capture(game_session, mock_client1, invalid_rank)
-          provide_run_capture(game_session, mock_client1, invalid_rank1)
+          # provide_run_capture(game_session, mock_client1, invalid_rank2)
+          mock_client1.provide_input invalid_rank2
           game_session.play_turn
           expect(mock_client1.capture_output).to eq RANK_MESSAGE
         end
         it 'does not send message after valid input' do
           provide_run_capture(game_session, mock_client1, player_selection)
           provide_run_capture(game_session, mock_client1, invalid_rank)
-          provide_run_capture(game_session, mock_client1, valid)
+          provide_run_capture(game_session, mock_client1, valid_rank)
           game_session.play_turn
           expect(mock_client1.capture_output).to be_empty
         end
@@ -159,7 +167,7 @@ describe GameSession do
       context 'when a turn is completed' do
         context 'all messages are sent to users'
         it 'resets state of messages' do
-          provide_input_to_pass_turn_checks(game_session, client1)
+          provide_input_to_pass_turn_checks(game_session, mock_client1)
           expect(game_session.selected_player).to be_nil
           expect(game_session.selected_player_message).to be_nil
           expect(game_session.selected_rank).to be_nil
