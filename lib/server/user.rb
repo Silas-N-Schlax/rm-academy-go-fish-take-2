@@ -12,4 +12,8 @@ class User
   def player
     @player ||= Player.new(self)
   end
+
+  def to_s
+    "#{name} - (#{id})"
+  end
 end
