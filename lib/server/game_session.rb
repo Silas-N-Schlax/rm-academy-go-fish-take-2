@@ -1,7 +1,7 @@
 require_relative '../go_fish/go_fish_game'
 # Game Session Class
 class GameSession
-  attr_accessor :users, :game, :current_user, :selected_player,
+  attr_accessor :users, :game, :selected_player,
                 :selected_player_message, :selected_rank,
                 :selected_rank_message, :list_of_players_sent
   WHAT_PLAYER_MESSAGE = 'Who would you like to ask?'.freeze
@@ -23,17 +23,15 @@ class GameSession
   end
 
   def play_turn
-    update_current_user
-    return if turn_skipped?
+    return handle_turn_skip if turn_skipped?
 
     send_list_of_players unless list_of_players_sent
-    return unless ask_for_player
-    return unless ask_for_rank
+    return unless all_input
 
     game.run_turn(selected_player, selected_rank)
 
-    # ^ Display hands after game
-    # * return if game.winner
+    return if game.winner
+
     send_all_messages_to_users_results
     reset_message_state
   end
@@ -43,21 +41,22 @@ class GameSession
       winner = game.winner
       end_game_message = "GAME OVER! #{winner.name} has won the game!"
       user.client.write_socket(end_game_message)
+      user.client.socket.close
     end
   end
 
   private
 
   def turn_skipped?
-    # Rename since not a boolean method
-    return false unless game.turn_skipped?
+    game.turn_skipped?
+  end
 
-    client = current_user.client
+  def handle_turn_skip
     message = ', turn has been skipped.'
-    client.write_socket("Your#{message}")
+    current_user.client.write_socket("Your#{message}")
     write_all_but_current("#{current_user.name}'s#{message}")
+    game.next_user_turn
     self.list_of_players_sent = nil
-    true
   end
 
   def write_all_but_current(message)
@@ -68,17 +67,8 @@ class GameSession
     end
   end
 
-  def update_current_user
-    self.current_user = game.current_user
-    # ! update to not store...
-  end
-
-  def show_hands_to_users
-    users.each do |user|
-      client = user.client
-      player = user.player
-      client.write_socket(player.format_hand)
-    end
+  def current_user
+    game.current_user
   end
 
   def send_list_of_players
@@ -94,6 +84,13 @@ class GameSession
     self.selected_rank = nil
     self.selected_rank_message = nil
     self.list_of_players_sent = nil
+  end
+
+  def all_input
+    return unless ask_for_player
+    return unless ask_for_rank
+
+    true
   end
 
   def ask_for_player
@@ -117,7 +114,7 @@ class GameSession
     selected_rank_input = client.read_socket
     return unless selected_rank_input
 
-    self.selected_rank = selected_rank_input if valid_rank?(selected_rank_input)
+    self.selected_rank = selected_rank_input.upcase if valid_rank?(selected_rank_input.upcase)
   end
 
   def valid_player?(player_input)
@@ -134,21 +131,30 @@ class GameSession
     false
   end
 
+  def show_hands_to_users
+    users.each do |user|
+      client = user.client
+      player = user.player
+      client.write_socket(player.format_hand)
+    end
+  end
+
   def send_all_messages_to_users_results
     users.each do |user|
-      next if user == game.results.current_user
-      user.client.write_socket(game.results.for_all)
-      user.client.write_socket(game.results.went_fishing) unless game.results.card_picked_up.nil?
-      user.client.write_socket(user.player.format_hand)
+      is_current = user == game.results.current_user
+      message_for_current_results(user) if is_current
+      message_for_all_results(user) unless is_current
     end
-    message_current_results
+    show_hands_to_users
   end
-  # ^ Refactor
 
-  def message_current_results
-    game.results.current_user.client.write_socket(game.results.for_current)
-    game.results.current_user.client.write_socket(game.results.go_fish) unless game.results.card_picked_up.nil?
-    game.results.current_user.client.write_socket(game.results.current_user.player.format_hand)
+  def message_for_current_results(user)
+    user.client.write_socket(game.results.for_current)
+    user.client.write_socket(game.results.go_fish) unless game.results.card_picked_up.nil?
   end
-  # ^ Refactor
+
+  def message_for_all_results(user)
+    user.client.write_socket(game.results.for_all)
+    user.client.write_socket(game.results.went_fishing) unless game.results.card_picked_up.nil?
+  end
 end

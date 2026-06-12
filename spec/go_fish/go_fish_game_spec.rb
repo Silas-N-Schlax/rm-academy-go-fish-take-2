@@ -66,6 +66,19 @@ describe GoFishGame do
     end
   end
 
+  describe '#next_user_turn' do
+    let(:game) { described_class.new([user1, user2]) }
+    it 'sets current user turn to user2' do
+      game.next_user_turn
+      expect(game.current_user).to eq user2
+    end
+    it 'can loop back around to user1' do
+      game.next_user_turn
+      game.next_user_turn
+      expect(game.current_user).to eq user1
+    end
+  end
+
   describe '#run_turn' do
     let(:card1) { Card.new('A') }
     context 'when a turn is run with 2 players' do
@@ -202,6 +215,12 @@ describe GoFishGame do
     context 'when the rank provided is a valid standard rank' do
       it 'returns true' do
         valid_rank = 'K'
+        expect(game.valid_rank?(valid_rank)).to be true
+      end
+    end
+    context 'when the lower case rank provided is a valid standard rank' do
+      it 'returns true' do
+        valid_rank = 'k'
         expect(game.valid_rank?(valid_rank)).to be true
       end
     end

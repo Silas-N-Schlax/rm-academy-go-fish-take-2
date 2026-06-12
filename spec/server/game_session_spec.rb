@@ -61,6 +61,11 @@ describe GameSession do
         expect(mock_client1.capture_output).to match end_game_regex
         expect(mock_client2.capture_output).to match end_game_regex
       end
+      it 'ends all user connections' do
+        game_session.end_game
+        expect(game_user1.client.socket.closed?).to be true
+        expect(game_user2.client.socket.closed?).to be true
+      end
     end
   end
 
@@ -72,16 +77,11 @@ describe GameSession do
       user1.name = 'Player1'
       user2.name = 'Player2'
     end
-    it 'updates the current user' do
-      game_session.play_turn
-      expect(game_session.current_user.id).to eq user1.id
-    end
 
     context 'when the deck and user hand is empty' do
       before do
         game.deck = []
         user1.player.hand = []
-        # binding.irb
       end
       it 'skips turn and sends messages' do
         mock_client1.capture_output
@@ -91,6 +91,10 @@ describe GameSession do
         all_message = 'Player1\'s, turn has been skipped.'
         expect(mock_client2.capture_output).to eq all_message
         expect(mock_client1.capture_output).to eq current_message
+      end
+      it 'sets player to next player' do
+        game_session.play_turn
+        expect(game.current_user).to eq user2
       end
     end
 
@@ -192,7 +196,7 @@ describe GameSession do
         it 'does not send message after valid input' do
           provide_run_capture(game_session, mock_client1, player_selection)
           provide_run_capture(game_session, mock_client1, invalid_rank)
-          provide_run_capture(game_session, mock_client1, valid_rank)
+          provide_run_capture(game_session, mock_client1, valid_rank.downcase)
           game_session.play_turn
           rank_message_regex = /what.*rank.*ask.*for.*->/im
           expect(mock_client1.capture_output).to_not match rank_message_regex

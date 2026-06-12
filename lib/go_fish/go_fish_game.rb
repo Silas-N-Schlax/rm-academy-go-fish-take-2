@@ -30,24 +30,27 @@ class GoFishGame
     return if winner
     return unless find_user(user_id)
 
-    # ^ Need since its checked in GameSession?
     user_in_question = find_user(user_id)
     cards = user_in_question.player.take_cards_of_rank(rank)
 
     current_user.player.add_cards(cards) unless cards.empty?
     fishing_card = go_fish(rank) if cards.empty?
-    generate_turn_result(user_in_question, rank, cards, fishing_card, cards.empty? && fishing_card.nil? ? false : true)
+    generate_turn_result(user_in_question, rank, cards, fishing_card)
   end
-  # ^ Refactor
 
   def winner
     winning_user if deck.empty? && users.all? { |user| user.player.empty_hand? }
   end
 
+  def next_user_turn
+    new_index = current_user_idx + 1
+    first_user_idx = 0
+    self.current_user_idx = new_index > users.size - 1 ? first_user_idx : new_index
+  end
+
   def find_user(id)
     users.select { |user| user.id == id }.first
   end
-  # ^ Private?
 
   def current_user
     users[current_user_idx]
@@ -62,9 +65,7 @@ class GoFishGame
   end
 
   def turn_skipped?
-    return true if deck.empty? && current_user.player.empty_hand?
-
-    false
+    deck.empty? && current_user.player.empty_hand?
   end
 
   private
@@ -85,23 +86,14 @@ class GoFishGame
     next_user_turn unless card.rank == rank
     card
   end
-  # ^ Refactor
 
-  def next_user_turn
-    new_index = current_user_idx + 1
-    first_user_idx = 0
-    self.current_user_idx = new_index > users.size - 1 ? first_user_idx : new_index
-  end
-  # ^ Refactor
-
-  def generate_turn_result(opponent, rank, cards, card_picked_up, goes_again)
+  def generate_turn_result(opponent, rank, cards, card_picked_up)
     self.results = TurnResult.new(
       current_user: current_user, opponent: opponent,
       card_asked_for: rank, cards_taken: cards,
-      card_picked_up: card_picked_up, goes_again: goes_again
+      card_picked_up: card_picked_up, goes_again: cards.empty? && card_picked_up.nil?
     )
   end
-  # ^ Refactor
 
   def winning_user
     winning_users = []
