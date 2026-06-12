@@ -40,6 +40,30 @@ describe GameSession do
     end
   end
 
+  describe '#play_game' do
+    let(:game_session) { described_class.new([user1, user2]) }
+    let(:game) { game_session.game }
+    let(:game_user1) { game.users.first }
+    let(:game_user2) { game.users.last }
+    before do
+      game_session.start
+      game.deck.cards = []
+      game_user1.name = 'Player1'
+      game_user1.player.hand = [Card.new('J'), Card.new('J'), Card.new('J')]
+      game_user2.player.hand = [Card.new('J')]
+      game_session.selected_player = 2
+      game_session.selected_rank = 'J'
+    end
+    it 'the game ends and messages are sent to users' do
+      end_game_regex = /game over.*player1.*has.*won.*game/im
+      game_session.play_game
+      expect(mock_client1.capture_output).to match end_game_regex
+      expect(mock_client2.capture_output).to match end_game_regex
+      expect(game_user1.client.socket.closed?).to be true
+      expect(game_user2.client.socket.closed?).to be true
+    end
+  end
+
   describe '#end_game' do
     context 'when the game has ended with a winner' do
       let(:game_session) { described_class.new([user1, user2]) }
