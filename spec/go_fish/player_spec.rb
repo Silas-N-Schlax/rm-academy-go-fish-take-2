@@ -103,7 +103,7 @@ describe Player do
       player.add_cards([Card.new('A'), Card.new('K')])
     end
     it 'returns string of current hand' do
-      expected_formatted_hand = 'Player1, you have the following cards in your hand:\n- A of Spades\n- K of Spades'
+      expected_formatted_hand = 'Player1, you have the following cards in your hand:\n- Ace of Spades\n- King of Spades'
       expect(player.format_hand.join('\n')).to eq expected_formatted_hand
     end
   end

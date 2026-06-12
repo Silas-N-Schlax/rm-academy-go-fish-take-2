@@ -21,7 +21,7 @@ describe TurnResult do
 
   describe '#for_current' do
     it 'returns the message for the current players if they got cards' do
-      expected_message = 'You asked for a K, took the following from Player2:\n- K of Hearts'
+      expected_message = 'You asked for a K, took the following from Player2:\n- King of Hearts'
       expect(results.for_current.join('\n')).to eq expected_message
     end
     it 'returns the message for the current player if they did not get cards' do
@@ -32,7 +32,7 @@ describe TurnResult do
   end
   describe '#for_all' do
     it 'returns message for the all if current player got cards' do
-      expected_message = 'Player1 asked for a K and took the following cards from Player2:\n- K of Hearts'
+      expected_message = 'Player1 asked for a K and took the following cards from Player2:\n- King of Hearts'
       expect(results.for_all.join('\n')).to eq expected_message
     end
     it 'returns message for all if the current player did not get cards' do
@@ -43,7 +43,7 @@ describe TurnResult do
   end
   describe '#go_fish' do
     it 'returns go fish message that reveals cards' do
-      expected_message = 'You went fishing and picked up a J of Spades. You do not get to go again.'
+      expected_message = 'You went fishing and picked up a Jack of Spades. You do not get to go again.'
       expect(results.go_fish).to eq expected_message
     end
   end
