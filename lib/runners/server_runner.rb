@@ -3,14 +3,17 @@ require_relative '../server/socket_server'
 
 server = SocketServer.new
 server.start
-while true do
-  begin
+begin
+  while true do
     server.accept_new_user
     game = server.create_game_session_if_possible
     if game
-      server.run_game(game)
+      # server.run_game(game)
+      Thread.new(game) { server.run_game(it) }
     end
-  rescue
-    server.stop
   end
+rescue StandardError => e
+  puts e
+  binding.irb
+  server.stop
 end

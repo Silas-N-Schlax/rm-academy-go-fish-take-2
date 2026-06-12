@@ -27,15 +27,16 @@ class GoFishGame
   end
 
   def run_turn(user_id, rank)
-    return if winner
-    return unless find_user(user_id)
+    return if winner || find_user(user_id).nil?
+    # return unless find_user(user_id)
 
+    current_user = self.current_user
     user_in_question = find_user(user_id)
     cards = user_in_question.player.take_cards_of_rank(rank)
 
     current_user.player.add_cards(cards) unless cards.empty?
     fishing_card = go_fish(rank) if cards.empty?
-    generate_turn_result(user_in_question, rank, cards, fishing_card)
+    generate_turn_result(user_in_question, rank, cards, fishing_card, current_user)
   end
 
   def winner
@@ -87,7 +88,7 @@ class GoFishGame
     card
   end
 
-  def generate_turn_result(opponent, rank, cards, card_picked_up)
+  def generate_turn_result(opponent, rank, cards, card_picked_up, current_user)
     self.results = TurnResult.new(
       current_user: current_user, opponent: opponent,
       card_asked_for: rank, cards_taken: cards,
