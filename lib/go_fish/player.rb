@@ -3,6 +3,7 @@ require_relative 'book'
 class Player
   attr_reader :user
   attr_accessor :hand, :books
+
   def initialize(user)
     @user = user
     @hand = []
