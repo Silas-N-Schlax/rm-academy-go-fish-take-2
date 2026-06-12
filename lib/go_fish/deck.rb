@@ -1,5 +1,6 @@
 require_relative 'card'
 
+# Deck
 class Deck
   attr_accessor :cards
 
