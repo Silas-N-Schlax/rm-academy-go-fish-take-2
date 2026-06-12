@@ -15,6 +15,12 @@ describe Deck do
       expect(deck.top_card).to eq top_card
       expect(deck.cards_left).to eq expected_deck_size
     end
+    context 'when the deck is empty' do
+      before { deck.cards = [] }
+      it 'returns nil' do
+        expect(deck.top_card).to be_nil
+      end
+    end
   end
   describe '#shuffle_deck' do
     it 'shuffles the deck' do
