@@ -12,38 +12,52 @@ class GameSession
   end
 
   def start
-    self.game = GoFishGame.new(users.map(&:player))
+    self.game = GoFishGame.new(users)
     game.start
     show_hands_to_users
   end
 
   def play_game
-    play_turn until true == false
-    # play_turn until game.winner?
-    # end_game
+    play_turn until game.winner
+    end_game
   end
 
   def play_turn
     update_current_user
-    return unless turn_skipped?
+    return if turn_skipped?
 
     send_list_of_players unless list_of_players_sent
     return unless ask_for_player
     return unless ask_for_rank
 
-    true
+    game.run_turn(selected_player, selected_rank)
+
+    # ^ Display hands after game
+    # * return if game.winner
+    send_all_messages_to_users_results
+    reset_message_state
+  end
+
+  def end_game
+    users.each do |user|
+      winner = game.winner
+      end_game_message = "GAME OVER! #{winner.name} has won the game!"
+      user.client.write_socket(end_game_message)
+    end
   end
 
   private
 
   def turn_skipped?
-    return true unless game.turn_skipped?
+    # Rename since not a boolean method
+    return false unless game.turn_skipped?
 
     client = current_user.client
     message = ', turn has been skipped.'
     client.write_socket("Your#{message}")
     write_all_but_current("#{current_user.name}'s#{message}")
-    false
+    self.list_of_players_sent = nil
+    true
   end
 
   def write_all_but_current(message)
@@ -55,8 +69,8 @@ class GameSession
   end
 
   def update_current_user
-    current_player = game.current_player
-    self.current_user = users.select { |user| user.id.equal?(current_player.user.id) }.first
+    self.current_user = game.current_user
+    # ! update to not store...
   end
 
   def show_hands_to_users
@@ -72,6 +86,14 @@ class GameSession
     users.map { |user| message_ary << "- #{user}" unless current_user == user }
     current_user.client.write_socket(message_ary)
     self.list_of_players_sent = true
+  end
+
+  def reset_message_state
+    self.selected_player = nil
+    self.selected_player_message = nil
+    self.selected_rank = nil
+    self.selected_rank_message = nil
+    self.list_of_players_sent = nil
   end
 
   def ask_for_player
@@ -106,9 +128,27 @@ class GameSession
   end
 
   def valid_rank?(rank_input)
-    return true if game.valid_rank?(rank_input)
+    return true if game.valid_rank?(rank_input) && game.card?(rank_input)
 
     self.selected_rank_message = nil
     false
   end
+
+  def send_all_messages_to_users_results
+    users.each do |user|
+      next if user == game.results.current_user
+      user.client.write_socket(game.results.for_all)
+      user.client.write_socket(game.results.went_fishing) unless game.results.card_picked_up.nil?
+      user.client.write_socket(user.player.format_hand)
+    end
+    message_current_results
+  end
+  # ^ Refactor
+
+  def message_current_results
+    game.results.current_user.client.write_socket(game.results.for_current)
+    game.results.current_user.client.write_socket(game.results.go_fish) unless game.results.card_picked_up.nil?
+    game.results.current_user.client.write_socket(game.results.current_user.player.format_hand)
+  end
+  # ^ Refactor
 end
