@@ -4,6 +4,7 @@ class GameSession
   attr_accessor :users, :game, :selected_player,
                 :selected_player_message, :selected_rank,
                 :selected_rank_message, :list_of_players_sent
+
   WHAT_PLAYER_MESSAGE = 'Who would you like to ask?'.freeze
   WHAT_RANK_MESSAGE = 'What rank would you like to ask for?'.freeze
 
