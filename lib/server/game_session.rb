@@ -142,7 +142,7 @@ class GameSession
 
   def send_all_messages_to_users_results
     users.each do |user|
-      is_current = user == game.results.current_user
+      is_current = user == game.latest_result.current_user
       message_for_current_results(user) if is_current
       message_for_all_results(user) unless is_current
     end
@@ -150,12 +150,12 @@ class GameSession
   end
 
   def message_for_current_results(user)
-    user.client.write_socket(game.results.for_current)
-    user.client.write_socket(game.results.go_fish) unless game.results.card_picked_up.nil?
+    user.client.write_socket(game.latest_result.for_current)
+    user.client.write_socket(game.latest_result.go_fish) unless game.latest_result.card_picked_up.nil?
   end
 
   def message_for_all_results(user)
-    user.client.write_socket(game.results.for_all)
-    user.client.write_socket(game.results.went_fishing) unless game.results.card_picked_up.nil?
+    user.client.write_socket(game.latest_result.for_all)
+    user.client.write_socket(game.latest_result.went_fishing) unless game.latest_result.card_picked_up.nil?
   end
 end

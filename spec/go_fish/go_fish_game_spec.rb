@@ -79,6 +79,17 @@ describe GoFishGame do
     end
   end
 
+  describe '#latest_result' do
+    let(:game) { described_class.new([user1, user2]) }
+    before do
+      game.turn_results << TurnResult.new(
+        current_user: nil, opponent: nil,
+        card_asked_for: nil, cards_taken: nil,
+        card_picked_up: nil, goes_again: nil
+      )
+    end
+  end
+
   describe '#run_turn' do
     let(:card1) { Card.new('A') }
     context 'when a turn is run with 2 players' do
@@ -114,7 +125,7 @@ describe GoFishGame do
           end
         end
         it 'returns a valid round result' do
-          expect(game.results).to be_a TurnResult
+          expect(game.latest_result).to be_a TurnResult
         end
       end
       context 'when user1 asks for a card user2 does have and go fishing' do

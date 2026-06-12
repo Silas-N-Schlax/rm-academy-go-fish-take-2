@@ -15,6 +15,7 @@ class GoFishGame
     @users = users
     @deck = Deck.new
     @current_user_idx = 0
+    @results = []
   end
 
   def start
@@ -57,6 +58,10 @@ class GoFishGame
     users[current_user_idx]
   end
 
+  def latest_result
+    results.last
+  end
+
   def valid_rank?(rank)
     Card.valid_rank?(rank)
   end
@@ -89,7 +94,7 @@ class GoFishGame
   end
 
   def generate_turn_result(opponent, rank, cards, card_picked_up, current_user)
-    self.results = TurnResult.new(
+    results << TurnResult.new(
       current_user: current_user, opponent: opponent,
       card_asked_for: rank, cards_taken: cards,
       card_picked_up: card_picked_up, goes_again: cards.empty? && card_picked_up.nil?
