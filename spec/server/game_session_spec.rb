@@ -129,7 +129,7 @@ describe GameSession do
       end
       it 'sends current user list of players once' do
         game_session.play_turn
-        list_of_players_regex = /here.*are.*players.*number.*prompted\):/im
+        list_of_players_regex = /here.*are.*players.*number.*prompted\):.*cards.*books/im
         expect(mock_client1.capture_output).to match list_of_players_regex
         expect(mock_client2.capture_output).to be_empty
         game_session.play_turn
@@ -278,7 +278,7 @@ describe GameSession do
             rank_selection = 'K'
             provide_and_run(game_session, mock_client1, player_selection)
             provide_and_run(game_session, mock_client1, rank_selection)
-            message_regex = /asked.*for.*went.*fishing.*following.*cards.*your.*hand/im
+            message_regex = /asked.*for.*went.*fishing.*following.*cards.*your.*hand.*books/im
             expect(mock_client1.capture_output).to match message_regex
             expect(mock_client2.capture_output).to match message_regex
           end

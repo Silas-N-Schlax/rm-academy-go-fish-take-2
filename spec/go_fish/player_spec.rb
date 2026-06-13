@@ -152,4 +152,26 @@ describe Player do
       expect(player.empty_hand?).to be true
     end
   end
+
+  describe '#formatted_player_details' do
+    let(:player) { described_class.new(user) }
+    before do
+      player.add_cards([Card.new('J'), Card.new('K')])
+      player.books << Book.new('2')
+    end
+    it 'returns formatted string with books and amount of cards' do
+      expected_output = 'Cards: 2 | Books: 1'
+      expect(player.formatted_player_details).to eq expected_output
+    end
+  end
+  describe '#format_books' do
+    let(:player) { described_class.new(user) }
+    before do
+      player.books = [Book.new('A'), Book.new('K')]
+    end
+    it 'returns string of current hand' do
+      expected_formatted_hand = 'Books:\n- Book of Aces\n- Book of Kings'
+      expect(player.format_books.join('\n')).to eq expected_formatted_hand
+    end
+  end
 end

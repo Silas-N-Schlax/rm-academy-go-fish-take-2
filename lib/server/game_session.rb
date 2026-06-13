@@ -74,7 +74,7 @@ class GameSession
 
   def send_list_of_players
     message_ary = ['Here are the players (enter the number when prompted):']
-    users.map { |user| message_ary << "- #{user}" unless current_user == user }
+    users.map { |user| message_ary << "- #{user} #{user.player.formatted_player_details}" unless current_user == user }
     current_user.client.write_socket(message_ary)
     self.list_of_players_sent = true
   end
@@ -137,6 +137,7 @@ class GameSession
       client = user.client
       player = user.player
       client.write_socket(player.format_hand)
+      client.write_socket(player.format_books)
     end
   end
 
